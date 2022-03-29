@@ -1,3 +1,3 @@
-FROM flag5/clustersecretbase:0.0.4
+FROM dkalashnik/clustersecretbase:0.0.6
 ADD /src /src
-CMD kopf run /src/handlers.py
+CMD kopf run -v --log-format=full /src/handlers.py
