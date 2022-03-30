@@ -34,17 +34,17 @@ def on_field_data(old, new, body, name, logger=None, **_):
         syncedns = body['status']['create_fn']['syncedns']
         v1 = client.CoreV1Api()
 
-        secret_type = 'Opaque'
+        secret_type = 'kubernetes.io/dockercfg'
         if 'type' in body["spec"]:
             secret_type = body["spec"]['type']
 
         for ns in syncedns:
             logger.info(f'Re Syncing secret {name} in ns {ns}')
-            metadata = {'name': name, 'namespace': ns}
-            api_version = 'v1'
-            kind = 'Secret'
-            data = new
-            body = client.V1Secret(api_version, data, kind, metadata, type=secret_type)
+            data = {name: base64.b64encode(data.encode("ascii")).decode("utf-8")
+                    for name, data in new.items()}
+            body = client.V1Secret(metadata=client.V1ObjectMeta(name=name),
+                                   data=data,
+                                   type=secret_type)
             response = v1.replace_namespaced_secret(name, ns, body)
             logger.debug(response)
     else:
